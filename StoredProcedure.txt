@@ -1,0 +1,72 @@
+create procedure mostrar(@descripcion varchar(50) = null )
+as
+declare
+
+	@id_actividad int,
+	@id_dos_actividad int, 
+	@nombre_p varchar(50),
+	@nombre_e varchar(50)
+	
+	
+begin
+
+	if(@descripcion is null)
+		begin
+			declare act cursor for 	
+			select distinct pa.id_actividad, a.descripcion
+			from actividades a, pasajero_actividad pa
+			where a.id_actividad = pa.id_actividad
+
+		end		
+				
+			else
+				begin
+					declare act cursor for 	
+					select distinct a.id_actividad, a.descripcion
+					from actividades a, pasajero_actividad pa
+					where a.id_actividad = pa.id_actividad
+					and a.descripcion = @descripcion				
+				end 
+				
+				open act
+				fetch next from act into @id_actividad, @descripcion
+
+
+			while(@@FETCH_STATUS = 0)
+				begin
+						print(' ' + @descripcion)
+						declare dos cursor for 
+						select pa.id_actividad, p.nombre, eh.nombre_establecimiento
+						from pasajero_actividad pa, pasajeros p, establecimiento_habitacion eh, pax_habitacion ph
+						where p.id_pax = pa.id_pax
+						and eh.id_habitacion = ph.id_habitacion
+						and ph.id_pax = pa.id_pax
+						and pa.id_actividad = @id_actividad 
+												
+					open dos 
+					fetch next from dos into @id_dos_actividad, @nombre_p, @nombre_e
+					
+					
+					while(@@FETCH_STATUS =0)
+						begin
+							print('       '  + @nombre_p + '  -  ' +  @nombre_e )
+							fetch next from dos into @id_dos_actividad, @nombre_p, @nombre_e
+
+						end 
+
+					close dos 
+					deallocate dos 
+
+					fetch next from act into @id_actividad, @descripcion
+
+				
+				end 
+				
+				
+				
+				close act 
+				deallocate act 
+
+end 	
+
+execute mostrar 'Rafting'
